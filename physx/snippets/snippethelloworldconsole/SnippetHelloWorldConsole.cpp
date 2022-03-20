@@ -59,6 +59,7 @@ PxPvd*                  gPvd        = NULL;
 
 PxReal stackZ = 10.0f;
 
+//Create Dynamic Object,like bullet.
 PxRigidDynamic* createDynamic(const PxTransform& t, const PxGeometry& geometry, const PxVec3& velocity=PxVec3(0))
 {
 	PxRigidDynamic* dynamic = PxCreateDynamic(*gPhysics, t, geometry, *gMaterial, 10.0f);
@@ -87,14 +88,21 @@ void createStack(const PxTransform& t, PxU32 size, PxReal halfExtent)
 
 void initPhysics(bool interactive)
 {
+	//Creates an instance of the foundation class.
+	//The foundation class is needed to initialize higher level SDKs.There may be only one instance per process.
 	gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
 
+	//Connect to pvd(PhysX Visual Debugger).
 	gPvd = PxCreatePvd(*gFoundation);
 	PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
 	gPvd->connect(*transport,PxPvdInstrumentationFlag::eALL);
 
+	//Creates an instance of the physics SDK. 
+	//Calling this will register all optional code modules (Articulations and HeightFields), preparing them for use.
+	//If you do not need some of these modules, consider calling PxCreateBasePhysics() instead and registering needed modules manually.
 	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(),true,gPvd);
 
+	//Create Scene
 	PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
 	sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 	gDispatcher = PxDefaultCpuDispatcherCreate(2);
@@ -111,14 +119,13 @@ void initPhysics(bool interactive)
 	}
 	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 
+	//Create Plane,add to scene.
 	PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0,1,0,0), *gMaterial);
 	gScene->addActor(*groundPlane);
 
+	//Create Cubes,add to scene.
 	for(PxU32 i=0;i<5;i++)
 		createStack(PxTransform(PxVec3(0,0,stackZ-=10.0f)), 10, 2.0f);
-
-	if(!interactive)
-		createDynamic(PxTransform(PxVec3(0,40,100)), PxSphereGeometry(10), PxVec3(0,-50,-100));
 }
 
 void stepPhysics(bool /*interactive*/)
