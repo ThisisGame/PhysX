@@ -1,2 +1,4 @@
 /physx/compiler/vc16win64
 physx/compiler/mac64
+physx/bin/mac.x86_64
+physx/install

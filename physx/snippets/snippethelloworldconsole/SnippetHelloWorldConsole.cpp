@@ -86,7 +86,7 @@ void createStack(const PxTransform& t, PxU32 size, PxReal halfExtent)
 	shape->release();
 }
 
-void initPhysics(bool interactive)
+void initPhysics()
 {
 	//Creates an instance of the foundation class.
 	//The foundation class is needed to initialize higher level SDKs.There may be only one instance per process.
@@ -162,7 +162,7 @@ void keyPress(unsigned char key, const PxTransform& camera)
 int snippetMain(int, const char*const*)
 {
 	static const PxU32 frameCount = 100;
-	initPhysics(false);
+	initPhysics();
 	for(PxU32 i=0; i<frameCount; i++)
 		stepPhysics(false);
 	cleanupPhysics(false);
