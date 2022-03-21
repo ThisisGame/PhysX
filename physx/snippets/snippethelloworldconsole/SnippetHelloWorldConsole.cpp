@@ -86,6 +86,7 @@ void createStack(const PxTransform& t, PxU32 size, PxReal halfExtent)
 	shape->release();
 }
 
+//Init Physx
 void initPhysics()
 {
 	//Creates an instance of the foundation class.
@@ -127,12 +128,6 @@ void initPhysics()
 	for(PxU32 i=0;i<5;i++)
 		createStack(PxTransform(PxVec3(0,0,stackZ-=10.0f)), 10, 2.0f);
 }
-
-void stepPhysics(bool /*interactive*/)
-{
-	gScene->simulate(1.0f/60.0f);
-	gScene->fetchResults(true);
-}
 	
 void cleanupPhysics(bool /*interactive*/)
 {
@@ -150,11 +145,11 @@ void cleanupPhysics(bool /*interactive*/)
 	printf("SnippetHelloWorld done.\n");
 }
 
+//press space,shoot.
 void keyPress(unsigned char key, const PxTransform& camera)
 {
 	switch(toupper(key))
 	{
-	case 'B':	createStack(PxTransform(PxVec3(0,0,stackZ-=10.0f)), 10, 2.0f);						break;
 	case ' ':	createDynamic(camera, PxSphereGeometry(3.0f), camera.rotate(PxVec3(0,0,-1))*200);	break;
 	}
 }
@@ -163,8 +158,10 @@ int snippetMain(int, const char*const*)
 {
 	static const PxU32 frameCount = 100;
 	initPhysics();
-	for(PxU32 i=0; i<frameCount; i++)
-		stepPhysics(false);
+	for(PxU32 i=0; i<frameCount; i++) {
+        gScene->simulate(1.0f/60.0f);
+        gScene->fetchResults(true);
+    }
 	cleanupPhysics(false);
 
 	return 0;
