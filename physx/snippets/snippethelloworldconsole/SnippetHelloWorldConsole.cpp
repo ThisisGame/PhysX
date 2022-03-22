@@ -59,33 +59,6 @@ PxPvd*                  gPvd        = NULL;
 
 PxReal stackZ = 10.0f;
 
-//Create Dynamic Object,like bullet.
-PxRigidDynamic* createDynamic(const PxTransform& t, const PxGeometry& geometry, const PxVec3& velocity=PxVec3(0))
-{
-	PxRigidDynamic* dynamic = PxCreateDynamic(*gPhysics, t, geometry, *gMaterial, 10.0f);
-	dynamic->setAngularDamping(0.5f);
-	dynamic->setLinearVelocity(velocity);
-	gScene->addActor(*dynamic);
-	return dynamic;
-}
-
-void createStack(const PxTransform& t, PxU32 size, PxReal halfExtent)
-{
-	PxShape* shape = gPhysics->createShape(PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
-	for(PxU32 i=0; i<size;i++)
-	{
-		for(PxU32 j=0;j<size-i;j++)
-		{
-			PxTransform localTm(PxVec3(PxReal(j*2) - PxReal(size-i), PxReal(i*2+1), 0) * halfExtent);
-			PxRigidDynamic* body = gPhysics->createRigidDynamic(t.transform(localTm));
-			body->attachShape(*shape);
-			PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-			gScene->addActor(*body);
-		}
-	}
-	shape->release();
-}
-
 //Init Physx
 void initPhysics()
 {
@@ -118,6 +91,8 @@ void initPhysics()
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
 	}
+    
+    //Create Physx Material.
 	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 
 	//Create Plane,add to scene.
@@ -125,8 +100,17 @@ void initPhysics()
 	gScene->addActor(*groundPlane);
 
 	//Create Cubes,add to scene.
-	for(PxU32 i=0;i<5;i++)
-		createStack(PxTransform(PxVec3(0,0,stackZ-=10.0f)), 10, 2.0f);
+    //1.Create Transform
+    PxTransform t = PxTransform(PxVec3(0,0,0));
+    //2.Create Sharp
+    float halfExtent = 2.0f;
+    PxShape* shape = gPhysics->createShape(PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
+    PxTransform localTm(PxVec3(0, 0, 0));
+    PxRigidDynamic* body = gPhysics->createRigidDynamic(t.transform(localTm));
+    body->attachShape(*shape);
+    PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+    gScene->addActor(*body);
+    shape->release();
 }
 	
 void cleanupPhysics(bool /*interactive*/)
@@ -150,7 +134,12 @@ void keyPress(unsigned char key, const PxTransform& camera)
 {
 	switch(toupper(key))
 	{
-	case ' ':	createDynamic(camera, PxSphereGeometry(3.0f), camera.rotate(PxVec3(0,0,-1))*200);	break;
+        case ' ':	{
+            PxRigidDynamic* dynamic = PxCreateDynamic(*gPhysics, camera, PxSphereGeometry(3.0f), *gMaterial, 10.0f);
+            dynamic->setAngularDamping(0.5f);
+            dynamic->setLinearVelocity(camera.rotate(PxVec3(0,0,-1))*200);
+            gScene->addActor(*dynamic);
+        }
 	}
 }
 
