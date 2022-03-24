@@ -143,12 +143,12 @@ void cleanupPhysics(bool /*interactive*/)
 	printf("SnippetHelloWorld done.\n");
 }
 
-void keyPress(unsigned char key, const PxTransform& camera)
+void keyPress(unsigned char key, const PxTransform& cameraTransform)
 {
 	switch(toupper(key))
 	{
 	case 'B':	createStack(PxTransform(PxVec3(0,0,stackZ-=10.0f)), 10, 2.0f);						break;
-	case ' ':	createDynamic(camera, PxSphereGeometry(3.0f), camera.rotate(PxVec3(0,0,-1))*200);	break;
+	case ' ':	createDynamic(cameraTransform, PxSphereGeometry(3.0f), cameraTransform.p);	break;
 	}
 }
 

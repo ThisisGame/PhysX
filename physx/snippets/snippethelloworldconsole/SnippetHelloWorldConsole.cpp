@@ -129,15 +129,19 @@ void cleanupPhysics(bool /*interactive*/)
 	printf("SnippetHelloWorld done.\n");
 }
 
-//press space,shoot.
-void keyPress(unsigned char key, const PxTransform& camera)
+//press space,Fire projectiles from camera position。
+void keyPress(unsigned char key, const PxTransform& cameraTransform)
 {
 	switch(toupper(key))
 	{
         case ' ':	{
-            PxRigidDynamic* dynamic = PxCreateDynamic(*gPhysics, camera, PxSphereGeometry(3.0f), *gMaterial, 10.0f);
+            //1.创建动态刚体，参数是位置、形状、材质、密度。
+            PxRigidDynamic* dynamic = PxCreateDynamic(*gPhysics, cameraTransform, PxSphereGeometry(3.0f), *gMaterial, 10.0f);
+            //2.设置角度阻尼系数。
             dynamic->setAngularDamping(0.5f);
-            dynamic->setLinearVelocity(camera.rotate(PxVec3(0,0,-1))*200);
+            //3.设置actor的线速度。下面代码意思是 朝相机相反的方向发射？
+            dynamic->setLinearVelocity(cameraTransform.rotate(PxVec3(0,0,-1))*200);
+            //4.添加到Scene中。
             gScene->addActor(*dynamic);
         }
 	}
