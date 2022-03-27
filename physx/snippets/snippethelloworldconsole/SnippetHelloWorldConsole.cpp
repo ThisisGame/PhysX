@@ -38,11 +38,9 @@
 
 #include "PxPhysicsAPI.h"
 
-#include "../snippetcommon/SnippetPrint.h"
-#include "../snippetcommon/SnippetPVD.h"
-#include "../snippetutils/SnippetUtils.h"
-
 using namespace physx;
+
+#define PX_RELEASE(x)	if(x)	{ x->release(); x = NULL;	}
 
 PxDefaultAllocator		gAllocator;
 PxDefaultErrorCallback	gErrorCallback;
@@ -57,26 +55,25 @@ PxMaterial*				gMaterial	= NULL;
 
 PxPvd*                  gPvd        = NULL;
 
-PxReal stackZ = 10.0f;
-
 //Init Physx
 void initPhysics()
 {
-	//Creates an instance of the foundation class.
-	//The foundation class is needed to initialize higher level SDKs.There may be only one instance per process.
+	//~en Creates an instance of the foundation class,The foundation class is needed to initialize higher level SDKs.only one instance per process.
+	//~zh 创建Foundation实例。
 	gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
 
-	//Connect to pvd(PhysX Visual Debugger).
+	//~en Connect to pvd(PhysX Visual Debugger).
+	//~zh 连接PVD
 	gPvd = PxCreatePvd(*gFoundation);
-	PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
+	PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
 	gPvd->connect(*transport,PxPvdInstrumentationFlag::eALL);
 
-	//Creates an instance of the physics SDK. 
-	//Calling this will register all optional code modules (Articulations and HeightFields), preparing them for use.
-	//If you do not need some of these modules, consider calling PxCreateBasePhysics() instead and registering needed modules manually.
+	//~en Creates an instance of the physics SDK. 
+	//~zh 创建Physx SDK实例
 	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(),true,gPvd);
 
-	//Create Scene
+	//~en Create Scene
+	//~zh 创建Scene
 	PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
 	sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
 	gDispatcher = PxDefaultCpuDispatcherCreate(2);
@@ -92,25 +89,31 @@ void initPhysics()
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
 	}
     
-    //Create Physx Material.
+    //~en Create Physx Material.
+	//~zh 创建物理材质
 	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 
-	//Create Plane,add to scene.
+	//~en Create Plane,add to scene.
+	//~zh 创建地板
 	PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0,1,0,0), *gMaterial);
 	gScene->addActor(*groundPlane);
 
-	//Create Cubes,add to scene.
-    //1.Create Transform
-    PxTransform t = PxTransform(PxVec3(0,0,0));
-    //2.Create Sharp
-    float halfExtent = 2.0f;
-    PxShape* shape = gPhysics->createShape(PxBoxGeometry(halfExtent, halfExtent, halfExtent), *gMaterial);
-    PxTransform localTm(PxVec3(0, 0, 0));
-    PxRigidDynamic* body = gPhysics->createRigidDynamic(t.transform(localTm));
+	//~en Create RigidBody,pos is (0,10,0)
+	//~zh 创建刚体，坐标是 (0,10,0)
+    PxRigidDynamic* body = gPhysics->createRigidDynamic(PxTransform(PxVec3(0, 10, 0)));
+
+	//~en Set rigidbody sharp
+	//~zh 设置刚体形状，一个球。
+	float radius = 0.5f;
+	PxShape* shape = gPhysics->createShape(PxSphereGeometry(radius), *gMaterial);
     body->attachShape(*shape);
+	shape->release();
+
+	//~en calculate mass,mass = volume * density
+	//~zh 根据体积、密度计算质量
     PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+	
     gScene->addActor(*body);
-    shape->release();
 }
 	
 void cleanupPhysics(bool /*interactive*/)
@@ -129,28 +132,12 @@ void cleanupPhysics(bool /*interactive*/)
 	printf("SnippetHelloWorld done.\n");
 }
 
-//press space,Fire projectiles from camera position。
-void keyPress(unsigned char key, const PxTransform& cameraTransform)
-{
-	switch(toupper(key))
-	{
-        case ' ':	{
-            //1.创建动态刚体，参数是位置、形状、材质、密度。
-            PxRigidDynamic* dynamic = PxCreateDynamic(*gPhysics, cameraTransform, PxSphereGeometry(3.0f), *gMaterial, 10.0f);
-            //2.设置角度阻尼系数。
-            dynamic->setAngularDamping(0.5f);
-            //3.设置actor的线速度。下面代码意思是 朝相机相反的方向发射？
-            dynamic->setLinearVelocity(cameraTransform.rotate(PxVec3(0,0,-1))*200);
-            //4.添加到Scene中。
-            gScene->addActor(*dynamic);
-        }
-	}
-}
-
 int snippetMain(int, const char*const*)
 {
-	static const PxU32 frameCount = 100;
+	static const PxU32 frameCount = 10000;
+
 	initPhysics();
+
 	for(PxU32 i=0; i<frameCount; i++) {
         gScene->simulate(1.0f/60.0f);
         gScene->fetchResults(true);

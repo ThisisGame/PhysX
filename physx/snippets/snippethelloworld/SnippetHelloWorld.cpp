@@ -148,7 +148,7 @@ void keyPress(unsigned char key, const PxTransform& cameraTransform)
 	switch(toupper(key))
 	{
 	case 'B':	createStack(PxTransform(PxVec3(0,0,stackZ-=10.0f)), 10, 2.0f);						break;
-	case ' ':	createDynamic(cameraTransform, PxSphereGeometry(3.0f), cameraTransform.p);	break;
+	case ' ':	createDynamic(cameraTransform, PxSphereGeometry(3.0f), cameraTransform.rotate(PxVec3(0, 0, -1)) * 200);	break;
 	}
 }
 
