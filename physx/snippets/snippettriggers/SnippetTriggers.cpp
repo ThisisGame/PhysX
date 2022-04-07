@@ -496,6 +496,7 @@ void keyPress(unsigned char key, const PxTransform& /*camera*/)
 
 	if(gScene)
 	{
+		key = key - 48;
 		if(key>=1 && key<=SCENARIO_COUNT)
 		{
 			gScenario = key-1;

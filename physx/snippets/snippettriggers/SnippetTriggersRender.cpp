@@ -40,7 +40,7 @@ using namespace physx;
 extern void initPhysics(bool interactive);
 extern void stepPhysics(bool interactive);	
 extern void cleanupPhysics(bool interactive);
-extern void (unsigned char key, const PxTransform& camera);keyPress
+extern void keyPress(unsigned char key, const PxTransform& camera);
 bool isTrigger(const PxFilterData& data);
 bool isTriggerShape(PxShape* shape);
 
